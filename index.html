@@ -1,0 +1,1512 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منصة الإحصائيات العامة لتطوع الهلال الأحمر - محافظة المدينة المنورة</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --red-crescent: #E4002B;
+            --red-crescent-dark: #c00024;
+            --sidebar-bg: #ffffff;
+            --header-bg: #ffffff;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            margin-bottom: 40px;
+        }
+        
+        .sidebar {
+            width: 250px;
+            position: fixed;
+            top: 56px;
+            right: 0;
+            bottom: 40px;
+            background-color: var(--sidebar-bg);
+            border-left: 1px solid #dee2e6;
+            padding: 20px;
+            overflow-y: auto;
+            box-shadow: -2px 0 5px rgba(0,0,0,0.05);
+        }
+        
+        .main-content {
+            margin-right: 250px;
+            margin-top: 56px;
+            padding: 20px;
+        }
+        
+        .header {
+            background-color: var(--header-bg);
+            box-shadow: 0 2px 10px rgba(0,0,0,.1);
+            position: fixed;
+            top: 0;
+            right: 0;
+            left: 0;
+            z-index: 1000;
+        }
+        
+        .version-bar {
+            position: fixed;
+            bottom: 0;
+            right: 0;
+            left: 0;
+            background-color: var(--red-crescent);
+            color: white;
+            text-align: center;
+            padding: 8px;
+            font-size: 0.875rem;
+            z-index: 1000;
+        }
+        
+        .card-stat {
+            border-radius: 12px;
+            box-shadow: 0 0.125rem 0.5rem rgba(0, 0, 0, 0.075);
+            transition: transform 0.3s ease;
+            border: none;
+        }
+        
+        .card-stat:hover {
+            transform: translateY(-5px);
+        }
+        
+        .chart-container {
+            height: 300px;
+        }
+        
+        .city-card {
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-radius: 12px;
+            overflow: hidden;
+            border: none;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        }
+        
+        .city-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        }
+        
+        .category-color {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-left: 10px;
+        }
+        
+        .nav-link.active {
+            background-color: var(--red-crescent);
+            color: white !important;
+            border-radius: 8px;
+        }
+        
+        .nav-link {
+            border-radius: 8px;
+            margin-bottom: 5px;
+            transition: all 0.2s ease;
+        }
+        
+        .nav-link:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .btn-red-crescent {
+            background-color: var(--red-crescent);
+            border-color: var(--red-crescent);
+            color: white;
+        }
+        
+        .btn-red-crescent:hover {
+            background-color: var(--red-crescent-dark);
+            border-color: var(--red-crescent-dark);
+        }
+        
+        .total-volunteers-display {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--red-crescent);
+        }
+        
+        .file-upload-area {
+            border: 2px dashed #dee2e6;
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            background-color: #f8f9fa;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .file-upload-area:hover {
+            border-color: var(--red-crescent);
+            background-color: #fff5f5;
+        }
+        
+        .issue-status-pending {
+            background-color: #fff3cd;
+            color: #856404;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+        }
+        
+        .issue-status-resolved {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+        }
+        
+        .user-role-badge {
+            font-size: 0.75rem;
+        }
+        
+        .stats-card {
+            background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
+        }
+        
+        .priority-low { background-color: #6c757d; }
+        .priority-medium { background-color: #ffc107; }
+        .priority-high { background-color: #fd7e14; }
+        .priority-critical { background-color: #dc3545; }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header py-3 border-bottom">
+        <div class="container-fluid">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-0">منصة الإحصائيات العامة لتطوع الهلال الأحمر</h5>
+                    <small class="text-muted">محافظة المدينة المنورة</small>
+                </div>
+                <div class="d-flex align-items-center">
+                    <div class="dropdown">
+                        <button class="btn btn-light dropdown-toggle" type="button" id="userMenu" data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle me-2"></i>
+                            <span id="userName">WELLCOME</span>
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#" onclick="logout()"><i class="fas fa-sign-out-alt me-2"></i>تسجيل الخروج</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse">
+                <div class="position-sticky pt-3">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="#" onclick="changeView('dashboard')">
+                                <i class="fas fa-home me-2"></i>
+                                الصفحة الرئيسية
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" onclick="changeView('fileUpload')">
+                                <i class="fas fa-upload me-2"></i>
+                                رفع ملفات الإحصائيات
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" onclick="changeView('technicalIssues')">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                المشاكل التقنية
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" onclick="changeView('accounts')">
+                                <i class="fas fa-users me-2"></i>
+                                إدارة الحسابات
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <!-- Main Content Area -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 main-content">
+                <!-- Dashboard View -->
+                <div id="dashboard-view">
+                    <div class="mb-4">
+                        <h1 class="h3">الصفحة الرئيسية</h1>
+                        <p class="text-muted">إحصائيات التطوع في محافظة المدينة المنورة</p>
+                    </div>
+
+                    <!-- Color Explanation -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">شرح الألوان</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-2 mb-2">
+                                    <div class="d-flex align-items-center">
+                                        <div class="category-color" style="background-color: #8B4513;"></div>
+                                        <span>إداري</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-2 mb-2">
+                                    <div class="d-flex align-items-center">
+                                        <div class="category-color" style="background-color: #28a745;"></div>
+                                        <span>بيئة</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-2 mb-2">
+                                    <div class="d-flex align-items-center">
+                                        <div class="category-color" style="background-color: #007bff;"></div>
+                                        <span>إعلامي</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-2 mb-2">
+                                    <div class="d-flex align-items-center">
+                                        <div class="category-color" style="background-color: #dc3545;"></div>
+                                        <span>إسعافي</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-2 mb-2">
+                                    <div class="d-flex align-items-center">
+                                        <div class="category-color" style="background-color: #ffc107;"></div>
+                                        <span>تعليم</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-2 mb-2">
+                                    <div class="d-flex align-items-center">
+                                        <div class="category-color" style="background-color: #000000;"></div>
+                                        <span>إنساني</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h2 class="h5 text-muted mb-3">محافظة المدينة المنورة</h2>
+
+                    <!-- Stats Info -->
+                    <div class="alert alert-success">
+                        <p class="mb-0">
+                            آخر تحديث: 15/08/1446 هـ
+                            • الفترة: أغسطس 2025
+                            • إجمالي المتطوعين: <strong class="total-volunteers-display">2450</strong>
+                        </p>
+                    </div>
+
+                    <!-- Cities Grid -->
+                    <div class="row" id="cities-grid">
+                        <!-- City cards will be populated by JavaScript -->
+                    </div>
+
+                    <!-- Charts Section -->
+                    <div class="row mt-5">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0">إحصائيات المدن</h5>
+                                </div>
+                                <div class="card-body chart-container">
+                                    <canvas id="citiesChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0">توزيع المتطوعين</h5>
+                                </div>
+                                <div class="card-body chart-container">
+                                    <canvas id="distributionChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- City Details View -->
+                <div id="city-details-view" class="d-none">
+                    <!-- Back button -->
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <button class="btn btn-outline-secondary" onclick="backToDashboard()">
+                            <i class="fas fa-arrow-right me-2"></i>
+                            العودة للصفحة الرئيسية
+                        </button>
+                        <h1 class="h3 mb-0" id="city-name-title">المدينة المنورة</h1>
+                        <div>
+                            <button class="btn btn-outline-primary me-2" onclick="downloadStats()">
+                                <i class="fas fa-download me-2"></i>
+                                تحميل الإحصائيات
+                            </button>
+                            <button class="btn btn-outline-danger" onclick="deleteStats()">
+                                <i class="fas fa-trash me-2"></i>
+                                حذف الإحصائيات
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Summary Cards -->
+                    <div class="row mb-4">
+                        <div class="col-md-3 mb-3">
+                            <div class="card card-stat stats-card h-100">
+                                <div class="card-body text-center">
+                                    <div class="text-muted mb-1">إجمالي المتطوعين</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card card-stat stats-card h-100">
+                                <div class="card-body text-center">
+                                    <div class="text-muted mb-1">التصنيفات النشطة</div>
+                                    <h3 class="text-primary mb-0" id="active-categories">8</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card card-stat stats-card h-100">
+                                <div class="card-body text-center">
+                                    <div class="text-muted mb-1">أعلى تصنيف</div>
+                                    <h3 class="text-success mb-0" id="highest-category">320</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card card-stat stats-card h-100">
+                                <div class="card-body text-center">
+                                    <div class="text-muted mb-1">المتوسط</div>
+                                    <h3 class="text-purple mb-0" id="average-value">156</h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Charts -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0">توزيع المتطوعين حسب التصنيف</h5>
+                                </div>
+                                <div class="card-body chart-container">
+                                    <canvas id="pieChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0">الاتجاه الشهري للتطوع</h5>
+                                </div>
+                                <div class="card-body chart-container">
+                                    <canvas id="barChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Detailed Statistics Table -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">تفاصيل الإحصائيات</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th class="text-end">التصنيف</th>
+                                            <th class="text-end">عدد المتطوعين</th>
+                                            <th class="text-end">النسبة المئوية</th>
+                                            <th class="text-end">اللون</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="statistics-table-body">
+                                        <!-- Data will be populated by JavaScript -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Opportunities Details Table -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">تفاصيل الفرص التطوعية</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th class="text-end">رقم الفرصة</th>
+                                            <th class="text-end">نوع الفرصة</th>
+                                            <th class="text-end">المدينة</th>
+                                            <th class="text-end">تاريخ البداية</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="opportunities-table-body">
+                                        <!-- Data will be populated by JavaScript -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- File Upload View -->
+                <div id="file-upload-view" class="d-none">
+                    <div class="text-center mb-4">
+                        <h1 class="h3">رفع ملفات الإحصائيات</h1>
+                        <p class="text-muted">رفع ملفات Excel مع التحليل التلقائي للبيانات والمعلومات</p>
+                    </div>
+
+                    <div class="d-flex gap-2 mb-4">
+                        <button class="btn btn-primary" onclick="showUploadForm()">
+                            <i class="fas fa-upload me-2"></i>
+                            رفع ملف جديد
+                        </button>
+                        <button class="btn btn-outline-primary" onclick="showUploadedFiles()">
+                            <i class="fas fa-eye me-2"></i>
+                            عرض الملفات المرفوعة (<span id="uploaded-files-count">3</span>)
+                        </button>
+                    </div>
+
+                    <!-- Upload Form -->
+                    <div id="upload-form-section">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-upload text-danger me-2"></i>
+                                    رفع ملف Excel جديد
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="file-upload-area mb-4" id="dropZone">
+                                    <i class="fas fa-file-excel fa-3x text-success mb-3"></i>
+                                    <p class="h5 mb-2">اختر ملف Excel للرفع</p>
+                                    <p class="text-muted">يدعم الملفات من نوع .xlsx و .xls فقط</p>
+                                    <input type="file" class="form-control mt-3" accept=".xlsx,.xls" id="fileInput">
+                                    <div class="mt-2 text-muted" id="fileInfo"></div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <button class="btn btn-primary w-100" onclick="analyzeFile()">
+                                        <i class="fas fa-search me-2"></i>
+                                        تحليل الملف واستخلاص البيانات
+                                    </button>
+                                </div>
+
+                                <!-- Analysis Results -->
+                                <div id="analysis-results" class="d-none">
+                                    <div class="card bg-light">
+                                        <div class="card-header">
+                                            <h5 class="mb-0 text-success">
+                                                <i class="fas fa-chart-bar me-2"></i>
+                                                نتائج التحليل التلقائي
+                                            </h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row mb-4" id="file-stats">
+                                                <!-- Stats will be populated by JavaScript -->
+                                            </div>
+
+                                            <div class="bg-white p-3 rounded mb-4">
+                                                <h6 class="mb-3">تفاصيل المدن والإحصائيات:</h6>
+                                                <div class="row" id="cities-details">
+                                                    <!-- Cities details will be populated by JavaScript -->
+                                                </div>
+                                            </div>
+
+                                            <button class="btn btn-success w-100" onclick="confirmUpload()">
+                                                <i class="fas fa-check-circle me-2"></i>
+                                                تأكيد رفع البيانات إلى المنصة
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Uploaded Files List -->
+                    <div id="uploaded-files-section" class="d-none">
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-eye text-primary me-2"></i>
+                                    الملفات المرفوعة (<span id="files-count-display">3</span>)
+                                </h5>
+                                <button class="btn btn-sm btn-outline-primary" onclick="refreshFilesList()">
+                                    <i class="fas fa-sync-alt me-1"></i>
+                                    تحديث
+                                </button>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th class="text-end">اسم الملف</th>
+                                                <th class="text-end">تاريخ الرفع</th>
+                                                <th class="text-end">الفترة</th>
+                                                <th class="text-end">المدن</th>
+                                                <th class="text-end">المتطوعين</th>
+                                                <th class="text-end">الإجراءات</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="uploaded-files-table">
+                                            <!-- Files will be populated by JavaScript -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info mt-4">
+                        <h6 class="mb-2">تعليمات الاستخدام:</h6>
+                        <ul class="mb-0 small">
+                            <li>قم برفع ملف Excel يحتوي على إحصائيات جميع مدن محافظة المدينة المنورة</li>
+                            <li>سيتم تحليل الملف تلقائياً واستخلاص أسماء المدن والتواريخ والتصنيفات</li>
+                            <li>راجع نتائج التحليل قبل تأكيد رفع البيانات إلى المنصة</li>
+                            <li>يمكنك عرض وإدارة جميع الملفات المرفوعة من خلال تبويب "عرض الملفات المرفوعة"</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Technical Issues View -->
+                <div id="technical-issues-view" class="d-none">
+                    <div class="text-center mb-4">
+                        <h1 class="h3">المشاكل التقنية</h1>
+                        <p class="text-muted">إدارة المشاكل التقنية والتقارير</p>
+                    </div>
+                    
+                    <!-- Report Issue Form -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">رفع مشكلة جديدة</h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="issue-form">
+                                <div class="mb-3">
+                                    <label class="form-label">عنوان المشكلة</label>
+                                    <input type="text" class="form-control" id="issue-title" placeholder="أدخل عنوان المشكلة">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">وصف المشكلة</label>
+                                    <textarea class="form-control" id="issue-description" rows="4" placeholder="صف المشكلة بالتفصيل"></textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">الأولوية</label>
+                                    <select class="form-select" id="issue-priority">
+                                        <option value="low">منخفضة</option>
+                                        <option value="medium" selected>متوسطة</option>
+                                        <option value="high">عالية</option>
+                                        <option value="critical">حرجة</option>
+                                    </select>
+                                </div>
+                                <button type="button" class="btn btn-red-crescent" onclick="submitIssue()">
+                                    <i class="fas fa-paper-plane me-2"></i>
+                                    إرسال المشكلة
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <!-- Issues List -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">تقارير المشاكل</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th class="text-end">#</th>
+                                            <th class="text-end">المستخدم</th>
+                                            <th class="text-end">العنوان</th>
+                                            <th class="text-end">الوصف</th>
+                                            <th class="text-end">التاريخ</th>
+                                            <th class="text-end">الأولوية</th>
+                                            <th class="text-end">الحالة</th>
+                                            <th class="text-end">الإجراءات</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="issues-table-body">
+                                        <!-- Issues will be populated by JavaScript -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Accounts Management View -->
+                <div id="accounts-view" class="d-none">
+                    <div class="text-center mb-4">
+                        <h1 class="h3">إدارة الحسابات</h1>
+                        <p class="text-muted">إدارة المستخدمين والصلاحيات</p>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">المستخدمون</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th class="text-end">الاسم</th>
+                                            <th class="text-end">البريد الإلكتروني</th>
+                                            <th class="text-end">الدور</th>
+                                            <th class="text-end">آخر نشاط</th>
+                                            <th class="text-end">الإجراءات</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="accounts-table-body">
+                                        <!-- Accounts will be populated by JavaScript -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Version Bar -->
+    <footer class="version-bar">
+        SRCA 1.0 - منصة الإحصائيات العامة لتطوع الهلال الأحمر - محافظة المدينة المنورة
+    </footer>
+
+    <!-- Edit User Role Modal -->
+    <div class="modal fade" id="editRoleModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">تعديل دور المستخدم</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="edit-user-email">
+                    <div class="mb-3">
+                        <label class="form-label">البريد الإلكتروني</label>
+                        <input type="email" class="form-control" id="edit-user-email-display" disabled>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">الدور الجديد</label>
+                        <select class="form-select" id="edit-user-role">
+                            <option value="explorer">مستكشف الإحصائيات</option>
+                            <option value="manager">مدير</option>
+                            <option value="tech_admin">إداري تقني</option>
+                            <option value="digital_admin">إدارة رقمية</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn btn-red-crescent" onclick="saveUserRole()">حفظ التغييرات</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Check if user is logged in
+        document.addEventListener('DOMContentLoaded', function() {
+            // In a real application, you would check for a valid session/token
+            // For this demo, we'll just check if a flag is set in localStorage
+            const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+            
+            if (!isLoggedIn) {
+                window.location.href = 'login.html';
+            }
+        });
+        
+        // Global variables
+        let currentView = 'dashboard';
+        let selectedCity = null;
+        let uploadedFiles = [
+            {
+                id: 1,
+                filename: "statistics_august_2025.xlsx",
+                upload_date: "15/08/1446 هـ",
+                month: 8,
+                year: 2025,
+                cities_count: 9,
+                total_volunteers: 2450,
+                uploaded_by: "admin@example.com",
+                checksum: "abc123"
+            },
+            {
+                id: 2,
+                filename: "statistics_july_2025.xlsx",
+                upload_date: "15/07/1446 هـ",
+                month: 7,
+                year: 2025,
+                cities_count: 9,
+                total_volunteers: 2380,
+                uploaded_by: "admin@example.com",
+                checksum: "def456"
+            },
+            {
+                id: 3,
+                filename: "statistics_june_2025.xlsx",
+                upload_date: "10/06/1446 هـ",
+                month: 6,
+                year: 2025,
+                cities_count: 9,
+                total_volunteers: 2250,
+                uploaded_by: "admin@example.com",
+                checksum: "ghi789"
+            }
+        ];
+        
+        let technicalIssues = [
+            {
+                id: 1,
+                user: "user@example.com",
+                title: "مشكلة في تحميل ملفات Excel",
+                description: "عند محاولة رفع ملف Excel، يظهر خطأ في التحليل",
+                date: "15/08/1446",
+                priority: "high",
+                status: "pending"
+            },
+            {
+                id: 2,
+                user: "admin@example.com",
+                title: "خطأ في عرض الإحصائيات",
+                description: "بعض الإحصائيات لا تظهر بشكل صحيح في لوحة التحكم",
+                date: "10/08/1446",
+                priority: "medium",
+                status: "resolved"
+            }
+        ];
+        
+        let userAccounts = [
+            {
+                name: "مدير النظام",
+                email: "admin@example.com",
+                role: "digital_admin",
+                last_activity: "15/08/1446"
+            },
+            {
+                name: "المستخدم العادي",
+                email: "user@example.com",
+                role: "explorer",
+                last_activity: "14/08/1446"
+            },
+            {
+                name: "مدير التقنية",
+                email: "tech@example.com",
+                role: "tech_admin",
+                last_activity: "15/08/1446"
+            }
+        ];
+        
+        // Sample data
+        const citiesData = {
+            "المدينة المنورة": {
+                totalVolunteers: 1250,
+                categories: [
+                    { name: "المجال الاسعافي", value: 320, color: "#dc3545" },
+                    { name: "التعليم", value: 280, color: "#ffc107" },
+                    { name: "البيئة", value: 210, color: "#28a745" },
+                    { name: "المساعدات الانسانية", value: 180, color: "#000000" },
+                    { name: "الاداري", value: 150, color: "#8B4513" },
+                    { name: "الإعلامي", value: 110, color: "#007bff" }
+                ],
+                details: [
+                    { opportunity_number: "VOL-001", opportunity_type: "حملة تطوعية شهر رمضان", city: "المدينة المنورة", start_date: "1446-03-01" },
+                    { opportunity_number: "VOL-002", opportunity_type: "زيارة كبار السن", city: "المدينة المنورة", start_date: "1446-03-15" }
+                ]
+            },
+            "العلا": {
+                totalVolunteers: 380,
+                categories: [
+                    { name: "المجال الاسعافي", value: 140, color: "#dc3545" },
+                    { name: "التعليم", value: 110, color: "#ffc107" },
+                    { name: "البيئة", value: 80, color: "#28a745" },
+                    { name: "الاداري", value: 50, color: "#8B4513" }
+                ],
+                details: [
+                    { opportunity_number: "VOL-003", opportunity_type: "تنظيف المناطق الأثرية", city: "العلا", start_date: "1446-03-10" }
+                ]
+            },
+            "ينبع": {
+                totalVolunteers: 420,
+                categories: [
+                    { name: "المساعدات الانسانية", value: 150, color: "#000000" },
+                    { name: "الاداري", value: 120, color: "#8B4513" },
+                    { name: "الإعلامي", value: 90, color: "#007bff" },
+                    { name: "المجال الاسعافي", value: 60, color: "#dc3545" }
+                ],
+                details: [
+                    { opportunity_number: "VOL-004", opportunity_type: "توزيع السلال الغذائية", city: "ينبع", start_date: "1446-03-20" }
+                ]
+            },
+            "الحناكية": {
+                totalVolunteers: 150,
+                categories: [
+                    { name: "التعليم", value: 80, color: "#ffc107" },
+                    { name: "البيئة", value: 70, color: "#28a745" }
+                ],
+                details: []
+            },
+            "مهد الذهب": {
+                totalVolunteers: 90,
+                categories: [
+                    { name: "المجال الاسعافي", value: 50, color: "#dc3545" },
+                    { name: "التعليم", value: 40, color: "#ffc107" }
+                ],
+                details: []
+            },
+            "بدر": {
+                totalVolunteers: 70,
+                categories: [
+                    { name: "البيئة", value: 40, color: "#28a745" },
+                    { name: "الاداري", value: 30, color: "#8B4513" }
+                ],
+                details: []
+            },
+            "خيبر": {
+                totalVolunteers: 60,
+                categories: [
+                    { name: "التعليم", value: 35, color: "#ffc107" },
+                    { name: "المجال الاسعافي", value: 25, color: "#dc3545" }
+                ],
+                details: []
+            },
+            "وادي الفرع": {
+                totalVolunteers: 0,
+                categories: [],
+                details: []
+            },
+            "العيص": {
+                totalVolunteers: 0,
+                categories: [],
+                details: []
+            }
+        };
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Display user's email in the header
+            const userEmail = localStorage.getItem('userEmail');
+            if (userEmail) {
+                document.getElementById('userName').textContent = userEmail;
+            }
+            
+            renderCitiesGrid();
+            initializeCharts();
+            renderAccountsTable();
+            renderIssuesTable();
+            updateFilesCount();
+            
+            // Set up file drop zone
+            setupFileDropZone();
+        });
+
+        // Set up file drop zone
+        function setupFileDropZone() {
+            const dropZone = document.getElementById('dropZone');
+            const fileInput = document.getElementById('fileInput');
+            const fileInfo = document.getElementById('fileInfo');
+            
+            // Click on drop zone to trigger file input
+            dropZone.addEventListener('click', () => {
+                fileInput.click();
+            });
+            
+            // Handle file selection
+            fileInput.addEventListener('change', function() {
+                if (this.files.length > 0) {
+                    const file = this.files[0];
+                    fileInfo.textContent = `الملف المحدد: ${file.name} (${(file.size / 1024).toFixed(2)} KB)`;
+                } else {
+                    fileInfo.textContent = '';
+                }
+            });
+            
+            // Drag and drop events
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.style.borderColor = '#E4002B';
+                dropZone.style.backgroundColor = '#fff5f5';
+            });
+            
+            dropZone.addEventListener('dragleave', () => {
+                dropZone.style.borderColor = '#dee2e6';
+                dropZone.style.backgroundColor = '#f8f9fa';
+            });
+            
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.style.borderColor = '#dee2e6';
+                dropZone.style.backgroundColor = '#f8f9fa';
+                
+                if (e.dataTransfer.files.length) {
+                    fileInput.files = e.dataTransfer.files;
+                    const file = e.dataTransfer.files[0];
+                    fileInfo.textContent = `الملف المحدد: ${file.name} (${(file.size / 1024).toFixed(2)} KB)`;
+                }
+            });
+        }
+
+        // Change view function
+        function changeView(view) {
+            // Hide all views
+            document.getElementById('dashboard-view').classList.add('d-none');
+            document.getElementById('city-details-view').classList.add('d-none');
+            document.getElementById('file-upload-view').classList.add('d-none');
+            document.getElementById('technical-issues-view').classList.add('d-none');
+            document.getElementById('accounts-view').classList.add('d-none');
+            
+            // Show selected view
+            switch(view) {
+                case 'dashboard':
+                    document.getElementById('dashboard-view').classList.remove('d-none');
+                    break;
+                case 'cityDetails':
+                    document.getElementById('city-details-view').classList.remove('d-none');
+                    break;
+                case 'fileUpload':
+                    document.getElementById('file-upload-view').classList.remove('d-none');
+                    showUploadForm();
+                    break;
+                case 'technicalIssues':
+                    document.getElementById('technical-issues-view').classList.remove('d-none');
+                    break;
+                case 'accounts':
+                    document.getElementById('accounts-view').classList.remove('d-none');
+                    break;
+            }
+            
+            // Update navigation
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            
+            if (view !== 'cityDetails') {
+                document.querySelector(`.nav-link[href="#"][onclick="changeView('${view}')"]`).classList.add('active');
+            }
+            
+            currentView = view;
+        }
+
+        // Render cities grid
+        function renderCitiesGrid() {
+            const container = document.getElementById('cities-grid');
+            container.innerHTML = '';
+            
+            const cities = Object.keys(citiesData);
+            
+            cities.forEach(city => {
+                const cityData = citiesData[city];
+                const card = document.createElement('div');
+                card.className = 'col-md-4 mb-4';
+                card.innerHTML = `
+                    <div class="card city-card h-100" onclick="showCityDetails('${city}')">
+                        <div class="card-body text-center">
+                            <div class="mb-3">
+                                ${cityData.totalVolunteers > 0 ? 
+                                    `<div class="rounded-circle bg-danger text-white d-flex align-items-center justify-content-center mx-auto" style="width: 80px; height: 80px; font-size: 1.5rem;">
+                                        ${cityData.totalVolunteers}
+                                    </div>` : 
+                                    `<div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center mx-auto" style="width: 80px; height: 80px; font-size: 1.5rem;">
+                                        0
+                                    </div>`
+                                }
+                            </div>
+                            <h5 class="card-title">${city}</h5>
+                            <p class="card-text small text-muted">
+                                المتطوعون: ${cityData.totalVolunteers}<br>
+                                التصنيفات: ${cityData.categories.filter(cat => cat.value > 0).length}
+                            </p>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // Show city details
+        function showCityDetails(city) {
+            selectedCity = city;
+            const cityData = citiesData[city];
+            
+            // Update title
+            document.getElementById('city-name-title').textContent = city;
+            
+            // Update summary cards
+            document.querySelector('.total-volunteers-display').textContent = cityData.totalVolunteers;
+            document.getElementById('active-categories').textContent = cityData.categories.filter(cat => cat.value > 0).length;
+            document.getElementById('highest-category').textContent = cityData.categories.length > 0 ? 
+                Math.max(...cityData.categories.map(cat => cat.value)) : 0;
+            document.getElementById('average-value').textContent = cityData.categories.length > 0 ? 
+                Math.round(cityData.totalVolunteers / cityData.categories.filter(cat => cat.value > 0).length) : 0;
+            
+            // Populate statistics table
+            const tableBody = document.getElementById('statistics-table-body');
+            tableBody.innerHTML = '';
+            
+            cityData.categories
+                .sort((a, b) => b.value - a.value)
+                .forEach(category => {
+                    const total = cityData.totalVolunteers;
+                    const percentage = total > 0 ? ((category.value / total) * 100).toFixed(1) : 0;
+                    
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${category.name}</td>
+                        <td class="fw-bold">${category.value}</td>
+                        <td>${percentage}%</td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="category-color" style="background-color: ${category.color};"></div>
+                                <span class="small text-muted">${category.color}</span>
+                            </div>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            
+            // Populate opportunities table
+            const opportunitiesBody = document.getElementById('opportunities-table-body');
+            opportunitiesBody.innerHTML = '';
+            
+            cityData.details.forEach(detail => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${detail.opportunity_number}</td>
+                    <td>${detail.opportunity_type}</td>
+                    <td>${detail.city}</td>
+                    <td>${detail.start_date}</td>
+                `;
+                opportunitiesBody.appendChild(row);
+            });
+            
+            // Change view
+            changeView('cityDetails');
+            
+            // Reinitialize charts for the city
+            initializeCityCharts(cityData);
+        }
+
+        // Back to dashboard
+        function backToDashboard() {
+            changeView('dashboard');
+        }
+
+        // Download statistics
+        function downloadStats() {
+            alert('تحميل الإحصائيات كملف Excel');
+        }
+
+        // Delete statistics
+        function deleteStats() {
+            if (confirm(`هل أنت متأكد من حذف إحصائيات ${selectedCity}؟`)) {
+                alert('تم حذف الإحصائيات بنجاح');
+                backToDashboard();
+            }
+        }
+
+        // Logout function
+        function logout() {
+            localStorage.removeItem('isLoggedIn');
+            localStorage.removeItem('userEmail');
+            window.location.href = 'login.html';
+        }
+
+        // Initialize charts
+        function initializeCharts() {
+            // Cities chart
+            const citiesCtx = document.getElementById('citiesChart');
+            if (citiesCtx) {
+                const citiesChart = new Chart(citiesCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: Object.keys(citiesData),
+                        datasets: [{
+                            label: 'عدد المتطوعين',
+                            data: Object.values(citiesData).map(city => city.totalVolunteers),
+                            backgroundColor: '#E4002B',
+                            borderColor: '#c00024',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Distribution chart
+            const distributionCtx = document.getElementById('distributionChart');
+            if (distributionCtx) {
+                const distributionChart = new Chart(distributionCtx, {
+                    type: 'pie',
+                    data: {
+                        labels: Object.keys(citiesData).filter(city => citiesData[city].totalVolunteers > 0),
+                        datasets: [{
+                            data: Object.values(citiesData).filter(city => city.totalVolunteers > 0).map(city => city.totalVolunteers),
+                            backgroundColor: [
+                                '#E4002B',
+                                '#c00024',
+                                '#dc3545',
+                                '#28a745',
+                                '#007bff',
+                                '#ffc107',
+                                '#6f42c1',
+                                '#17a2b8',
+                                '#fd7e14'
+                            ]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false
+                    }
+                });
+            }
+        }
+
+        // Initialize city charts
+        function initializeCityCharts(cityData) {
+            // Pie chart for categories
+            const pieCtx = document.getElementById('pieChart');
+            if (pieCtx) {
+                const pieChart = new Chart(pieCtx, {
+                    type: 'pie',
+                    data: {
+                        labels: cityData.categories.filter(cat => cat.value > 0).map(cat => cat.name),
+                        datasets: [{
+                            data: cityData.categories.filter(cat => cat.value > 0).map(cat => cat.value),
+                            backgroundColor: cityData.categories.filter(cat => cat.value > 0).map(cat => cat.color)
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false
+                    }
+                });
+            }
+
+            // Bar chart for monthly trend
+            const barCtx = document.getElementById('barChart');
+            if (barCtx) {
+                const monthlyData = [
+                    { month: 'يناير', value: Math.floor(Math.random() * 500) + 200 },
+                    { month: 'فبراير', value: Math.floor(Math.random() * 500) + 200 },
+                    { month: 'مارس', value: Math.floor(Math.random() * 500) + 200 },
+                    { month: 'أبريل', value: Math.floor(Math.random() * 500) + 200 },
+                    { month: 'مايو', value: Math.floor(Math.random() * 500) + 200 },
+                    { month: 'يونيو', value: Math.floor(Math.random() * 500) + 200 },
+                    { month: 'يوليو', value: Math.floor(Math.random() * 500) + 200 }
+                ];
+
+                const barChart = new Chart(barCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: monthlyData.map(item => item.month),
+                        datasets: [{
+                            label: 'عدد المتطوعين',
+                            data: monthlyData.map(item => item.value),
+                            backgroundColor: '#E4002B',
+                            borderColor: '#c00024',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // File upload functions
+        function showUploadForm() {
+            document.getElementById('upload-form-section').classList.remove('d-none');
+            document.getElementById('uploaded-files-section').classList.add('d-none');
+        }
+
+        function showUploadedFiles() {
+            document.getElementById('upload-form-section').classList.add('d-none');
+            document.getElementById('uploaded-files-section').classList.remove('d-none');
+            renderUploadedFiles();
+        }
+
+        function analyzeFile() {
+            const fileInput = document.getElementById('fileInput');
+            if (!fileInput.files.length) {
+                alert('الرجاء اختيار ملف أولاً');
+                return;
+            }
+
+            // Simulate analysis
+            setTimeout(() => {
+                document.getElementById('analysis-results').classList.remove('d-none');
+                
+                // Populate file stats
+                const statsContainer = document.getElementById('file-stats');
+                statsContainer.innerHTML = `
+                    <div class="col-md-3">
+                        <div class="bg-white p-3 rounded">
+                            <div class="text-sm text-muted">عدد المدن المكتشفة</div>
+                            <div class="h5 text-danger mb-0">9 مدن</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="bg-white p-3 rounded">
+                            <div class="text-sm text-muted">الفترة الزمنية</div>
+                            <div class="h5 text-primary mb-0">أغسطس 2025</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="bg-white p-3 rounded">
+                            <div class="text-sm text-muted">إجمالي المتطوعين</div>
+                            <div class="h5 text-success mb-0">2450</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="bg-white p-3 rounded">
+                            <div class="text-sm text-muted">التصنيفات المكتشفة</div>
+                            <div class="h5 text-warning mb-0">6</div>
+                        </div>
+                    </div>
+                `;
+            }, 2000);
+        }
+
+        function confirmUpload() {
+            alert('تم رفع البيانات بنجاح!');
+            document.getElementById('analysis-results').classList.add('d-none');
+            document.getElementById('fileInput').value = '';
+            document.getElementById('fileInfo').textContent = '';
+        }
+
+        function renderUploadedFiles() {
+            const tbody = document.getElementById('uploaded-files-table');
+            tbody.innerHTML = '';
+
+            uploadedFiles.forEach(file => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${file.filename}</td>
+                    <td>${file.upload_date}</td>
+                    <td>${getMonthName(file.month)} ${file.year}</td>
+                    <td>${file.cities_count}</td>
+                    <td>${file.total_volunteers}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteFile(${file.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function deleteFile(fileId) {
+            if (confirm('هل أنت متأكد من حذف هذا الملف؟')) {
+                uploadedFiles = uploadedFiles.filter(file => file.id !== fileId);
+                renderUploadedFiles();
+                updateFilesCount();
+            }
+        }
+
+        function updateFilesCount() {
+            document.getElementById('uploaded-files-count').textContent = uploadedFiles.length;
+            document.getElementById('files-count-display').textContent = uploadedFiles.length;
+        }
+
+        function refreshFilesList() {
+            renderUploadedFiles();
+        }
+
+        function getMonthName(monthNumber) {
+            const months = [
+                'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
+                'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
+            ];
+            return months[monthNumber - 1] || 'غير محدد';
+        }
+
+        // Technical issues functions
+        function submitIssue() {
+            const title = document.getElementById('issue-title').value;
+            const description = document.getElementById('issue-description').value;
+            const priority = document.getElementById('issue-priority').value;
+
+            if (!title || !description) {
+                alert('الرجاء ملء جميع الحقول المطلوبة');
+                return;
+            }
+
+            const newIssue = {
+                id: Date.now(),
+                user: localStorage.getItem('userEmail') || 'مجهول',
+                title: title,
+                description: description,
+                date: new Date().toLocaleDateString('ar-SA'),
+                priority: priority,
+                status: 'pending'
+            };
+
+            technicalIssues.unshift(newIssue);
+            renderIssuesTable();
+
+            // Clear form
+            document.getElementById('issue-title').value = '';
+            document.getElementById('issue-description').value = '';
+            document.getElementById('issue-priority').value = 'medium';
+
+            alert('تم إرسال المشكلة بنجاح');
+        }
+
+        function renderIssuesTable() {
+            const tbody = document.getElementById('issues-table-body');
+            tbody.innerHTML = '';
+
+            technicalIssues.forEach((issue, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${issue.user}</td>
+                    <td>${issue.title}</td>
+                    <td>${issue.description.substring(0, 50)}${issue.description.length > 50 ? '...' : ''}</td>
+                    <td>${issue.date}</td>
+                    <td><span class="badge priority-${issue.priority}">${getPriorityLabel(issue.priority)}</span></td>
+                    <td><span class="badge ${issue.status === 'resolved' ? 'issue-status-resolved' : 'issue-status-pending'}">${getStatusLabel(issue.status)}</span></td>
+                    <td>
+                        ${issue.status === 'pending' ? 
+                            `<button class="btn btn-sm btn-success" onclick="resolveIssue(${issue.id})">تم الحل</button>` : 
+                            '<span class="text-success">تم الحل</span>'
+                        }
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function getPriorityLabel(priority) {
+            const labels = {
+                low: 'منخفضة',
+                medium: 'متوسطة',
+                high: 'عالية',
+                critical: 'حرجة'
+            };
+            return labels[priority] || priority;
+        }
+
+        function getStatusLabel(status) {
+            const labels = {
+                pending: 'قيد المراجعة',
+                resolved: 'تم الحل'
+            };
+            return labels[status] || status;
+        }
+
+        function resolveIssue(issueId) {
+            technicalIssues = technicalIssues.map(issue => 
+                issue.id === issueId ? { ...issue, status: 'resolved' } : issue
+            );
+            renderIssuesTable();
+        }
+
+        // Accounts management functions
+        function renderAccountsTable() {
+            const tbody = document.getElementById('accounts-table-body');
+            tbody.innerHTML = '';
+
+            userAccounts.forEach(account => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${account.name}</td>
+                    <td>${account.email}</td>
+                    <td><span class="badge user-role-badge bg-primary">${getRoleLabel(account.role)}</span></td>
+                    <td>${account.last_activity}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary" onclick="editUserRole('${account.email}', '${account.role}')">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function getRoleLabel(role) {
+            const labels = {
+                explorer: 'مستكشف الإحصائيات',
+                manager: 'مدير',
+                tech_admin: 'إداري تقني',
+                digital_admin: 'إدارة رقمية'
+            };
+            return labels[role] || role;
+        }
+
+        function editUserRole(email, currentRole) {
+            document.getElementById('edit-user-email').value = email;
+            document.getElementById('edit-user-email-display').value = email;
+            document.getElementById('edit-user-role').value = currentRole;
+            
+            const modal = new bootstrap.Modal(document.getElementById('editRoleModal'));
+            modal.show();
+        }
+
+        function saveUserRole() {
+            const email = document.getElementById('edit-user-email').value;
+            const newRole = document.getElementById('edit-user-role').value;
+
+            userAccounts = userAccounts.map(account => 
+                account.email === email ? { ...account, role: newRole } : account
+            );
+
+            renderAccountsTable();
+            
+            const modal = bootstrap.Modal.getInstance(document.getElementById('editRoleModal'));
+            modal.hide();
+
+            alert('تم تحديث دور المستخدم بنجاح');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,1222 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منصة الإحصائيات العامة لتطوع الهلال الأحمر - محافظة المدينة المنورة</title>
+    
+    <!-- React and ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    
+    <!-- Babel for JSX transformation -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Recharts for charts -->
+    <script src="https://unpkg.com/recharts@2.8.0/umd/Recharts.js"></script>
+    
+    <!-- Lucide React Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --red-crescent: #E4002B;
+            --red-crescent-dark: #c00024;
+            font-synthesis: none;
+            text-rendering: optimizeLegibility;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        #root {
+            margin: auto;
+        }
+
+        body {
+            font-family: 'Cairo', 'Inter', system-ui, -apple-system, sans-serif;
+            direction: rtl;
+        }
+
+        .text-red-crescent {
+            color: var(--red-crescent);
+        }
+
+        .bg-red-crescent {
+            background-color: var(--red-crescent);
+        }
+
+        .border-red-crescent {
+            border-color: var(--red-crescent);
+        }
+
+        .recharts-wrapper {
+            direction: ltr;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, createElement: h } = React;
+        const { createRoot } = ReactDOM;
+        
+        // Lucide Icons
+        const { 
+            Home, Upload, AlertTriangle, Users, LogOut, User, ArrowRight, 
+            Download, Trash2, Calendar, FileText, CheckCircle, AlertCircle, 
+            BarChart3, Eye, Clock, RefreshCw, Building, TrendingUp, MapPin,
+            Tag, Shield
+        } = lucide;
+
+        // Recharts components
+        const { 
+            PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, 
+            BarChart, Bar, XAxis, YAxis, CartesianGrid 
+        } = Recharts;
+
+        // Button Component
+        const Button = ({ 
+            children, 
+            variant = 'default', 
+            size = 'default', 
+            className = '', 
+            disabled = false, 
+            onClick,
+            type = 'button',
+            ...props 
+        }) => {
+            const baseClasses = 'inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none';
+            
+            const variants = {
+                default: 'bg-red-600 text-white hover:bg-red-700',
+                outline: 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50',
+                ghost: 'hover:bg-gray-100 text-gray-700',
+                destructive: 'bg-red-600 text-white hover:bg-red-700',
+                secondary: 'bg-gray-100 text-gray-900 hover:bg-gray-200'
+            };
+            
+            const sizes = {
+                default: 'h-10 py-2 px-4',
+                sm: 'h-9 px-3 rounded-md',
+                lg: 'h-11 px-8 rounded-md'
+            };
+            
+            const classes = `${baseClasses} ${variants[variant]} ${sizes[size]} ${className}`;
+            
+            return h('button', {
+                type,
+                className: classes,
+                disabled,
+                onClick,
+                ...props
+            }, children);
+        };
+
+        // Card Components
+        const Card = ({ children, className = '', ...props }) => {
+            return h('div', {
+                className: `rounded-lg border border-gray-200 bg-white shadow-sm ${className}`,
+                ...props
+            }, children);
+        };
+
+        const CardHeader = ({ children, className = '', ...props }) => {
+            return h('div', {
+                className: `flex flex-col space-y-1.5 p-6 ${className}`,
+                ...props
+            }, children);
+        };
+
+        const CardTitle = ({ children, className = '', ...props }) => {
+            return h('h3', {
+                className: `text-lg font-semibold leading-none tracking-tight ${className}`,
+                ...props
+            }, children);
+        };
+
+        const CardContent = ({ children, className = '', ...props }) => {
+            return h('div', {
+                className: `p-6 pt-0 ${className}`,
+                ...props
+            }, children);
+        };
+
+        // Logo Component
+        const Logo = ({ size = 'md', showText = true }) => {
+            const sizeClasses = {
+                sm: 'w-8 h-8',
+                md: 'w-12 h-12',
+                lg: 'w-16 h-16',
+                xl: 'w-20 h-20'
+            };
+
+            const textSizes = {
+                sm: 'text-xs',
+                md: 'text-sm',
+                lg: 'text-base',
+                xl: 'text-lg'
+            };
+
+            return h('div', { className: 'flex items-center gap-3' }, [
+                h('div', {
+                    key: 'logo',
+                    className: `${sizeClasses[size]} bg-gradient-to-br from-red-600 to-red-700 rounded-full flex items-center justify-center overflow-hidden shadow-lg`
+                }, [
+                    h('span', { 
+                        key: 'icon',
+                        className: 'text-white font-bold text-lg' 
+                    }, '🌙')
+                ]),
+                showText && h('div', { key: 'text' }, [
+                    h('h1', {
+                        key: 'title',
+                        className: `font-bold text-gray-900 ${textSizes[size]}`
+                    }, 'الهلال الأحمر السعودي'),
+                    h('p', {
+                        key: 'subtitle',
+                        className: `text-gray-600 ${size === 'sm' ? 'text-xs' : 'text-xs'}`
+                    }, 'محافظة المدينة المنورة')
+                ])
+            ]);
+        };
+
+        // Header Component
+        const Header = ({ user, onLogout, version }) => {
+            return h('header', {
+                className: 'fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 shadow-sm'
+            }, [
+                h('div', {
+                    key: 'container',
+                    className: 'flex items-center justify-between px-6 py-4'
+                }, [
+                    h('div', { key: 'title' }, [
+                        h('h1', {
+                            key: 'main-title',
+                            className: 'text-xl font-bold text-gray-900'
+                        }, 'منصة الإحصائيات العامة لتطوع الهلال الأحمر'),
+                        h('p', {
+                            key: 'subtitle',
+                            className: 'text-sm text-gray-600'
+                        }, 'محافظة المدينة المنورة')
+                    ]),
+                    h('div', {
+                        key: 'user-section',
+                        className: 'flex items-center space-x-4 space-x-reverse'
+                    }, [
+                        h('div', {
+                            key: 'user-info',
+                            className: 'flex items-center space-x-2 space-x-reverse text-sm'
+                        }, [
+                            h(User, { key: 'user-icon', className: 'h-4 w-4 text-gray-500' }),
+                            h('span', { key: 'user-name', className: 'text-gray-700' }, user.name),
+                            h('span', { key: 'user-role', className: 'text-gray-500' }, `(${user.role})`)
+                        ]),
+                        h('button', {
+                            key: 'logout-btn',
+                            onClick: onLogout,
+                            className: 'flex items-center space-x-2 space-x-reverse px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors'
+                        }, [
+                            h(LogOut, { key: 'logout-icon', className: 'h-4 w-4' }),
+                            h('span', { key: 'logout-text' }, 'تسجيل الخروج')
+                        ]),
+                        h('div', {
+                            key: 'logo-section',
+                            className: 'border-r border-gray-200 pr-4 mr-4'
+                        }, [
+                            h(Logo, { key: 'logo', size: 'md', showText: false })
+                        ])
+                    ])
+                ])
+            ]);
+        };
+
+        // Sidebar Component
+        const Sidebar = ({ userRole, currentView, onViewChange }) => {
+            const menuItems = [
+                {
+                    id: 'dashboard',
+                    label: 'الصفحة الرئيسية',
+                    icon: Home,
+                    roles: ['explorer', 'manager', 'tech_admin', 'digital_admin'],
+                    description: 'عرض الإحصائيات العامة'
+                },
+                {
+                    id: 'fileUpload',
+                    label: 'رفع ملفات الإحصائيات',
+                    icon: Upload,
+                    roles: ['manager', 'tech_admin', 'digital_admin'],
+                    description: 'رفع وإدارة ملفات البيانات',
+                    adminOnly: true
+                },
+                {
+                    id: 'technicalIssues',
+                    label: 'المشاكل التقنية',
+                    icon: AlertTriangle,
+                    roles: ['explorer', 'manager', 'tech_admin', 'digital_admin'],
+                    description: 'الإبلاغ عن المشاكل'
+                },
+                {
+                    id: 'accounts',
+                    label: 'إدارة الحسابات',
+                    icon: Users,
+                    roles: ['digital_admin'],
+                    description: 'إدارة المستخدمين والصلاحيات',
+                    adminOnly: true
+                }
+            ];
+
+            const visibleItems = menuItems.filter(item => 
+                item.roles.includes(userRole)
+            );
+
+            const getRoleLabel = (role) => {
+                const labels = {
+                    explorer: 'مستكشف',
+                    manager: 'مدير',
+                    tech_admin: 'إداري تقني',
+                    digital_admin: 'إدارة رقمية'
+                };
+                return labels[role] || role;
+            };
+
+            const getRoleColor = (role) => {
+                const colors = {
+                    explorer: 'bg-blue-100 text-blue-800',
+                    manager: 'bg-green-100 text-green-800',
+                    tech_admin: 'bg-yellow-100 text-yellow-800',
+                    digital_admin: 'bg-red-100 text-red-800'
+                };
+                return colors[role] || 'bg-gray-100 text-gray-800';
+            };
+
+            return h('aside', {
+                className: 'fixed top-16 right-0 bottom-10 w-72 bg-gradient-to-b from-white to-gray-50 border-l border-gray-200 shadow-lg overflow-y-auto'
+            }, [
+                h('div', {
+                    key: 'user-badge',
+                    className: 'p-4 border-b border-gray-200 bg-white'
+                }, [
+                    h('div', {
+                        className: 'flex items-center gap-3'
+                    }, [
+                        h('div', {
+                            key: 'shield-icon',
+                            className: 'p-2 bg-red-100 rounded-lg'
+                        }, [
+                            h(Shield, { className: 'h-5 w-5 text-red-600' })
+                        ]),
+                        h('div', { key: 'role-info' }, [
+                            h('div', {
+                                key: 'role-label',
+                                className: 'text-sm font-medium text-gray-800'
+                            }, 'صلاحية المستخدم'),
+                            h('div', {
+                                key: 'role-badge',
+                                className: `text-xs px-2 py-1 rounded-full font-medium ${getRoleColor(userRole)}`
+                            }, getRoleLabel(userRole))
+                        ])
+                    ])
+                ]),
+                h('nav', { key: 'navigation', className: 'p-4' }, [
+                    h('div', { key: 'nav-header', className: 'mb-4' }, [
+                        h('h3', {
+                            className: 'text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3'
+                        }, 'القائمة الرئيسية')
+                    ]),
+                    h('ul', { key: 'nav-list', className: 'space-y-2' }, 
+                        visibleItems.map((item) => {
+                            const Icon = item.icon;
+                            const isActive = currentView === item.id;
+                            
+                            return h('li', { key: item.id }, [
+                                h('button', {
+                                    onClick: () => onViewChange(item.id),
+                                    className: `w-full group relative overflow-hidden rounded-xl transition-all duration-200 ${
+                                        isActive
+                                            ? 'bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg transform scale-105'
+                                            : 'text-gray-700 hover:bg-gray-100 hover:shadow-md'
+                                    }`
+                                }, [
+                                    h('div', {
+                                        key: 'button-content',
+                                        className: 'flex items-center space-x-3 space-x-reverse px-4 py-4'
+                                    }, [
+                                        h('div', {
+                                            key: 'icon-container',
+                                            className: `p-2 rounded-lg transition-colors ${
+                                                isActive 
+                                                    ? 'bg-white bg-opacity-20' 
+                                                    : 'bg-gray-100 group-hover:bg-gray-200'
+                                            }`
+                                        }, [
+                                            h(Icon, { key: 'icon', className: 'h-5 w-5' })
+                                        ]),
+                                        h('div', { key: 'text-container', className: 'flex-1 text-right' }, [
+                                            h('div', {
+                                                key: 'label',
+                                                className: 'font-medium text-sm'
+                                            }, item.label),
+                                            h('div', {
+                                                key: 'description',
+                                                className: `text-xs mt-1 ${
+                                                    isActive ? 'text-red-100' : 'text-gray-500'
+                                                }`
+                                            }, item.description)
+                                        ]),
+                                        item.adminOnly && h('div', {
+                                            key: 'admin-badge',
+                                            className: `text-xs px-2 py-1 rounded-full font-medium ${
+                                                isActive 
+                                                    ? 'bg-white bg-opacity-20 text-white' 
+                                                    : 'bg-orange-100 text-orange-600'
+                                            }`
+                                        }, 'إداري')
+                                    ]),
+                                    isActive && h('div', {
+                                        key: 'active-indicator',
+                                        className: 'absolute left-0 top-0 bottom-0 w-1 bg-white bg-opacity-50'
+                                    })
+                                ])
+                            ]);
+                        })
+                    ),
+                    h('div', {
+                        key: 'stats-summary',
+                        className: 'mt-8 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100'
+                    }, [
+                        h('div', {
+                            key: 'stats-header',
+                            className: 'flex items-center gap-2 mb-3'
+                        }, [
+                            h(BarChart3, { key: 'chart-icon', className: 'h-4 w-4 text-blue-600' }),
+                            h('span', {
+                                key: 'stats-title',
+                                className: 'text-sm font-medium text-blue-800'
+                            }, 'ملخص سريع')
+                        ]),
+                        h('div', { key: 'stats-content', className: 'space-y-2 text-xs' }, [
+                            h('div', { key: 'cities', className: 'flex justify-between' }, [
+                                h('span', { className: 'text-gray-600' }, 'المدن النشطة'),
+                                h('span', { className: 'font-medium text-gray-800' }, '9')
+                            ]),
+                            h('div', { key: 'volunteers', className: 'flex justify-between' }, [
+                                h('span', { className: 'text-gray-600' }, 'إجمالي المتطوعين'),
+                                h('span', { className: 'font-medium text-gray-800' }, '2,450')
+                            ]),
+                            h('div', { key: 'opportunities', className: 'flex justify-between' }, [
+                                h('span', { className: 'text-gray-600' }, 'الفرص النشطة'),
+                                h('span', { className: 'font-medium text-gray-800' }, '156')
+                            ])
+                        ])
+                    ])
+                ])
+            ]);
+        };
+
+        // LastUpdateTracker Component
+        const LastUpdateTracker = ({ lastUpdate, totalVolunteers, period, isLoading }) => {
+            const formatDate = (dateString) => {
+                if (!dateString) return 'غير محدد';
+                
+                try {
+                    const date = new Date(dateString);
+                    return date.toLocaleDateString('ar-SA', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                } catch (error) {
+                    return 'تاريخ غير صالح';
+                }
+            };
+
+            const getTimeSinceUpdate = (dateString) => {
+                if (!dateString) return null;
+                
+                try {
+                    const updateDate = new Date(dateString);
+                    const now = new Date();
+                    const diffInHours = Math.floor((now - updateDate) / (1000 * 60 * 60));
+                    
+                    if (diffInHours < 1) {
+                        return 'منذ أقل من ساعة';
+                    } else if (diffInHours < 24) {
+                        return `منذ ${diffInHours} ساعة`;
+                    } else {
+                        const diffInDays = Math.floor(diffInHours / 24);
+                        return `منذ ${diffInDays} يوم`;
+                    }
+                } catch (error) {
+                    return null;
+                }
+            };
+
+            if (isLoading) {
+                return h('div', {
+                    className: 'bg-blue-50 p-4 rounded-lg inline-block mb-6'
+                }, [
+                    h('div', {
+                        key: 'loading',
+                        className: 'flex items-center gap-2'
+                    }, [
+                        h(RefreshCw, { key: 'spinner', className: 'h-4 w-4 text-blue-600 animate-spin' }),
+                        h('p', { key: 'text', className: 'text-blue-800' }, 'جاري تحميل آخر الإحصائيات...')
+                    ])
+                ]);
+            }
+
+            if (!lastUpdate) {
+                return h('div', {
+                    className: 'bg-blue-50 p-4 rounded-lg inline-block mb-6'
+                }, [
+                    h('div', {
+                        key: 'no-data',
+                        className: 'flex items-center gap-2'
+                    }, [
+                        h(Calendar, { key: 'calendar', className: 'h-4 w-4 text-blue-600' }),
+                        h('p', { key: 'text', className: 'text-blue-800' }, 'لا توجد إحصائيات متاحة حالياً. يرجى رفع ملف Excel لعرض البيانات.')
+                    ])
+                ]);
+            }
+
+            const timeSince = getTimeSinceUpdate(lastUpdate);
+
+            return h('div', {
+                className: 'bg-green-50 p-4 rounded-lg inline-block mb-6 border border-green-200'
+            }, [
+                h('div', {
+                    key: 'content',
+                    className: 'flex items-center gap-3'
+                }, [
+                    h(Clock, { key: 'clock', className: 'h-5 w-5 text-green-600' }),
+                    h('div', { key: 'info', className: 'text-green-800' }, [
+                        h('div', {
+                            key: 'details',
+                            className: 'flex items-center gap-4 flex-wrap'
+                        }, [
+                            h('span', { key: 'update' }, [
+                                h('strong', {}, 'آخر تحديث: '),
+                                formatDate(lastUpdate)
+                            ]),
+                            timeSince && h('span', {
+                                key: 'time-since',
+                                className: 'text-sm text-green-600'
+                            }, `(${timeSince})`),
+                            period && h('span', { key: 'period' }, [
+                                h('strong', {}, 'الفترة: '),
+                                period
+                            ]),
+                            totalVolunteers && h('span', { key: 'volunteers' }, [
+                                h('strong', {}, 'إجمالي المتطوعين: '),
+                                h('span', { className: 'font-bold ml-1' }, totalVolunteers.toLocaleString('ar-SA'))
+                            ])
+                        ])
+                    ])
+                ])
+            ]);
+        };
+
+        // CityCard Component
+        const CityCard = ({ city, cityData, onCitySelect }) => {
+            const handleCityClick = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                console.log('City clicked:', city, cityData);
+                console.log('onCitySelect function:', onCitySelect);
+                
+                if (onCitySelect && typeof onCitySelect === 'function') {
+                    try {
+                        onCitySelect(city, cityData.details || []);
+                        console.log('City select called successfully');
+                    } catch (error) {
+                        console.error('Error calling onCitySelect:', error);
+                    }
+                } else {
+                    console.error('onCitySelect is not a function:', onCitySelect);
+                }
+            };
+
+            return h(Card, {
+                className: 'cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-105 border-2 hover:border-red-200',
+                onClick: handleCityClick
+            }, [
+                h(CardContent, { key: 'content', className: 'p-6 text-center' }, [
+                    h('div', { key: 'circle', className: 'mb-4 flex justify-center' }, [
+                        cityData.totalVolunteers > 0 ? 
+                            h('div', {
+                                key: 'volunteers-circle',
+                                className: 'w-24 h-24 rounded-full bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center text-white font-bold text-2xl shadow-lg'
+                            }, cityData.totalVolunteers) :
+                            h('div', {
+                                key: 'empty-circle',
+                                className: 'w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 font-bold border-2 border-dashed border-gray-300'
+                            }, '0')
+                    ]),
+                    h('h3', {
+                        key: 'title',
+                        className: 'text-lg font-semibold text-gray-800 mb-3'
+                    }, city),
+                    h('div', { key: 'stats', className: 'space-y-2' }, [
+                        h('div', {
+                            key: 'volunteers',
+                            className: 'flex items-center justify-center gap-2 text-sm text-gray-600'
+                        }, [
+                            h(Users, { key: 'users-icon', className: 'h-4 w-4' }),
+                            h('span', { key: 'volunteers-text' }, `المتطوعون: ${cityData.totalVolunteers}`)
+                        ]),
+                        h('div', {
+                            key: 'categories',
+                            className: 'flex items-center justify-center gap-2 text-sm text-gray-600'
+                        }, [
+                            h(BarChart3, { key: 'chart-icon', className: 'h-4 w-4' }),
+                            h('span', { key: 'categories-text' }, `التصنيفات: ${cityData.categories?.filter(cat => cat.value > 0).length || 0}`)
+                        ])
+                    ]),
+                    cityData.totalVolunteers > 0 && h('div', {
+                        key: 'click-hint',
+                        className: 'mt-4 px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium'
+                    }, 'انقر للتفاصيل')
+                ])
+            ]);
+        };
+
+        // Dashboard Component
+        const Dashboard = ({ onCitySelect, statisticsData, userRole, isLoading }) => {
+            const [currentStatistics, setCurrentStatistics] = useState(null);
+            const [loading, setLoading] = useState(true);
+
+            console.log('Dashboard onCitySelect:', onCitySelect);
+
+            const cities = [
+                'المدينة',
+                'العلا', 
+                'ينبع',
+                'الحناكية',
+                'مهد الذهب',
+                'بدر',
+                'خيبر',
+                'وادي الفرع',
+                'العيص'
+            ];
+
+            const categoryColors = {
+                'الاداري‬‏': '#8B4513',
+                '‫البيئة‬‏': '#28a745',
+                'الإعلامي': '#007bff',
+                '‫المجال الاسعافي‬‏': '#dc3545',
+                '‫التعليم‬‏': '#ffc107',
+                '‫المساعدات‬‏ ‫الانسانية‬‏': '#000000'
+            };
+
+            const loadCurrentStatistics = async () => {
+                try {
+                    setLoading(true);
+                    // Mock data for demo
+                    const mockData = {
+                        success: true,
+                        data: {
+                            upload_date: new Date().toISOString(),
+                            month: new Date().getMonth() + 1,
+                            year: new Date().getFullYear(),
+                            total_volunteers: 2450,
+                            data: {
+                                'المدينة': {
+                                    totalVolunteers: 1250,
+                                    data: [
+                                        { name: 'المجال الاسعافي', value: 320 },
+                                        { name: 'التعليم', value: 280 },
+                                        { name: 'البيئة', value: 210 }
+                                    ],
+                                    details: [
+                                        { opportunity_number: 'VOL-001', opportunity_type: 'حملة تطوعية', city: 'المدينة', start_date: '2024-01-15' }
+                                    ]
+                                },
+                                'العلا': {
+                                    totalVolunteers: 380,
+                                    data: [
+                                        { name: 'المجال الاسعافي', value: 140 },
+                                        { name: 'التعليم', value: 110 }
+                                    ],
+                                    details: []
+                                }
+                            }
+                        }
+                    };
+                    
+                    if (mockData.success && mockData.data) {
+                        setCurrentStatistics(mockData.data);
+                    }
+                } catch (error) {
+                    console.error('خطأ في تحميل الإحصائيات:', error);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            useEffect(() => {
+                loadCurrentStatistics();
+            }, []);
+
+            const getMonthName = (month) => {
+                const months = {
+                    1: 'يناير', 2: 'فبراير', 3: 'مارس', 4: 'أبريل',
+                    5: 'مايو', 6: 'يونيو', 7: 'يوليو', 8: 'أغسطس',
+                    9: 'سبتمبر', 10: 'أكتوبر', 11: 'نوفمبر', 12: 'ديسمبر'
+                };
+                return months[month] || month;
+            };
+
+            const getCityData = (city) => {
+                if (statisticsData && statisticsData[city]) {
+                    const cityData = statisticsData[city];
+                    const categories = Array.isArray(cityData.data) ? cityData.data.map(item => ({
+                        name: item.name,
+                        value: item.value,
+                        color: categoryColors[item.name] || '#6c757d'
+                    })) : [];
+
+                    return { 
+                        totalVolunteers: cityData.totalVolunteers || 0, 
+                        categories, 
+                        details: cityData.details || [] 
+                    };
+                }
+
+                if (currentStatistics && currentStatistics.data && currentStatistics.data[city]) {
+                    const cityData = currentStatistics.data[city];
+                    const categories = cityData.data ? cityData.data.map(item => ({
+                        name: item.name,
+                        value: item.value,
+                        color: categoryColors[item.name] || '#6c757d'
+                    })) : [];
+
+                    return { 
+                        totalVolunteers: cityData.totalVolunteers || 0, 
+                        categories, 
+                        details: cityData.details || [] 
+                    };
+                }
+
+                return { totalVolunteers: 0, categories: [], details: [] };
+            };
+
+            if (loading) {
+                return h('div', {
+                    className: 'flex items-center justify-center min-h-screen'
+                }, [
+                    h('div', { key: 'loading', className: 'text-center' }, [
+                        h('div', {
+                            key: 'spinner',
+                            className: 'animate-spin rounded-full h-32 w-32 border-b-2 border-red-600 mx-auto'
+                        }),
+                        h('p', {
+                            key: 'text',
+                            className: 'mt-4 text-gray-600'
+                        }, 'جاري تحميل الإحصائيات...')
+                    ])
+                ]);
+            }
+
+            const hasData = currentStatistics && currentStatistics.data && Object.keys(currentStatistics.data).length > 0;
+
+            return h('div', { className: 'max-w-7xl mx-auto' }, [
+                h('div', { key: 'header', className: 'mb-8' }, [
+                    h('h1', {
+                        key: 'title',
+                        className: 'text-3xl font-bold text-gray-900 mb-2'
+                    }, 'الصفحة الرئيسية'),
+                    h('p', {
+                        key: 'subtitle',
+                        className: 'text-gray-600'
+                    }, 'إحصائيات التطوع في محافظة المدينة المنورة')
+                ]),
+
+                h(Card, { key: 'colors-card', className: 'mb-8' }, [
+                    h(CardHeader, { key: 'colors-header' }, [
+                        h(CardTitle, { key: 'colors-title' }, 'شرح الألوان')
+                    ]),
+                    h(CardContent, { key: 'colors-content' }, [
+                        h('div', {
+                            className: 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4'
+                        }, [
+                            h('div', { key: 'admin', className: 'flex items-center gap-2' }, [
+                                h('div', { className: 'w-4 h-4 rounded-full', style: { backgroundColor: '#8B4513' } }),
+                                h('span', { className: 'text-sm' }, 'إداري')
+                            ]),
+                            h('div', { key: 'env', className: 'flex items-center gap-2' }, [
+                                h('div', { className: 'w-4 h-4 rounded-full', style: { backgroundColor: '#28a745' } }),
+                                h('span', { className: 'text-sm' }, 'بيئة')
+                            ]),
+                            h('div', { key: 'media', className: 'flex items-center gap-2' }, [
+                                h('div', { className: 'w-4 h-4 rounded-full', style: { backgroundColor: '#007bff' } }),
+                                h('span', { className: 'text-sm' }, 'إعلامي')
+                            ]),
+                            h('div', { key: 'medical', className: 'flex items-center gap-2' }, [
+                                h('div', { className: 'w-4 h-4 rounded-full', style: { backgroundColor: '#dc3545' } }),
+                                h('span', { className: 'text-sm' }, 'إسعافي')
+                            ]),
+                            h('div', { key: 'edu', className: 'flex items-center gap-2' }, [
+                                h('div', { className: 'w-4 h-4 rounded-full', style: { backgroundColor: '#ffc107' } }),
+                                h('span', { className: 'text-sm' }, 'تعليم')
+                            ]),
+                            h('div', { key: 'human', className: 'flex items-center gap-2' }, [
+                                h('div', { className: 'w-4 h-4 rounded-full', style: { backgroundColor: '#000000' } }),
+                                h('span', { className: 'text-sm' }, 'إنساني')
+                            ])
+                        ])
+                    ])
+                ]),
+
+                h('h2', {
+                    key: 'region-title',
+                    className: 'text-xl text-gray-600 mb-4'
+                }, 'محافظة المدينة المنورة'),
+
+                h(LastUpdateTracker, {
+                    key: 'update-tracker',
+                    lastUpdate: currentStatistics?.upload_date || currentStatistics?.last_modified,
+                    totalVolunteers: currentStatistics?.total_volunteers,
+                    period: currentStatistics ? `${getMonthName(currentStatistics.month)} ${currentStatistics.year}` : null,
+                    isLoading: loading || isLoading
+                }),
+
+                h('div', {
+                    key: 'cities-grid',
+                    className: 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'
+                }, cities.map((city) => {
+                    const cityData = getCityData(city);
+                    console.log(`City data for ${city}:`, cityData);
+                    
+                    return h(CityCard, {
+                        key: city,
+                        city,
+                        cityData,
+                        onCitySelect
+                    });
+                }))
+            ]);
+        };
+
+        // Login Component
+        const Login = ({ onLogin, version }) => {
+            const [email, setEmail] = useState('');
+            const [captchaAnswer, setCaptchaAnswer] = useState('');
+            const [captchaQuestion, setCaptchaQuestion] = useState('');
+            const [correctAnswer, setCorrectAnswer] = useState(0);
+            const [error, setError] = useState('');
+
+            const generateCaptcha = () => {
+                const num1 = Math.floor(Math.random() * 10) + 1;
+                const num2 = Math.floor(Math.random() * 10) + 1;
+                const operators = ['+', '-', '×'];
+                const operator = operators[Math.floor(Math.random() * operators.length)];
+                
+                let question, answer;
+                
+                switch(operator) {
+                    case '+':
+                        question = `${num1} + ${num2} = ?`;
+                        answer = num1 + num2;
+                        break;
+                    case '-':
+                        if (num1 >= num2) {
+                            question = `${num1} - ${num2} = ?`;
+                            answer = num1 - num2;
+                        } else {
+                            question = `${num2} - ${num1} = ?`;
+                            answer = num2 - num1;
+                        }
+                        break;
+                    case '×':
+                        question = `${num1} × ${num2} = ?`;
+                        answer = num1 * num2;
+                        break;
+                    default:
+                        question = `${num1} + ${num2} = ?`;
+                        answer = num1 + num2;
+                }
+                
+                setCaptchaQuestion(question);
+                setCorrectAnswer(answer);
+                setCaptchaAnswer('');
+            };
+
+            useEffect(() => {
+                generateCaptcha();
+            }, []);
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                setError('');
+
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(email)) {
+                    setError('الرجاء إدخال بريد إلكتروني صحيح');
+                    return;
+                }
+
+                if (parseInt(captchaAnswer) !== correctAnswer) {
+                    setError('الإجابة الرياضية غير صحيحة. حاول مرة أخرى.');
+                    generateCaptcha();
+                    return;
+                }
+
+                let role = 'explorer';
+                let name = email.split('@')[0];
+                
+                if (email.includes('digital') || email.includes('admin')) {
+                    role = 'digital_admin';
+                    name = 'مدير رقمي';
+                } else if (email.includes('tech')) {
+                    role = 'tech_admin';
+                    name = 'إداري تقني';
+                } else if (email.includes('manager')) {
+                    role = 'manager';
+                    name = 'مدير';
+                }
+
+                const userInfo = {
+                    name: name,
+                    email: email,
+                    role: role,
+                    loginTime: new Date().toISOString()
+                };
+
+                window.dispatchEvent(new CustomEvent('userLogin', { 
+                    detail: { user: userInfo } 
+                }));
+
+                onLogin(email, role);
+            };
+
+            return h('div', {
+                className: 'min-h-screen bg-gradient-to-br from-red-600 to-red-800 flex items-center justify-center p-4'
+            }, [
+                h(Card, { key: 'login-card', className: 'w-full max-w-md' }, [
+                    h(CardHeader, {
+                        key: 'login-header',
+                        className: 'text-center bg-red-600 text-white rounded-t-lg'
+                    }, [
+                        h('div', {
+                            key: 'logo-container',
+                            className: 'w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4 overflow-hidden'
+                        }, [
+                            h('span', {
+                                key: 'logo-text',
+                                className: 'text-2xl font-bold'
+                            }, '🌙')
+                        ]),
+                        h(CardTitle, {
+                            key: 'title',
+                            className: 'text-xl mb-2'
+                        }, 'منصة الإحصائيات العامة'),
+                        h('p', {
+                            key: 'subtitle',
+                            className: 'text-red-100 text-sm'
+                        }, 'لتطوع الهلال الأحمر - محافظة المدينة المنورة')
+                    ]),
+                    
+                    h(CardContent, { key: 'login-content', className: 'p-6' }, [
+                        h('form', {
+                            key: 'login-form',
+                            onSubmit: handleSubmit,
+                            className: 'space-y-4'
+                        }, [
+                            h('div', { key: 'email-field' }, [
+                                h('label', {
+                                    className: 'block text-sm font-medium text-gray-700 mb-2'
+                                }, 'البريد الإلكتروني'),
+                                h('div', { className: 'relative' }, [
+                                    h('input', {
+                                        type: 'email',
+                                        value: email,
+                                        onChange: (e) => setEmail(e.target.value),
+                                        className: 'w-full pr-10 pl-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500',
+                                        placeholder: 'أدخل بريدك الإلكتروني',
+                                        required: true
+                                    })
+                                ]),
+                                h('p', {
+                                    className: 'text-xs text-gray-500 mt-1'
+                                }, 'مثال: user@example.com')
+                            ]),
+
+                            h('div', { key: 'captcha-field' }, [
+                                h('label', {
+                                    className: 'block text-sm font-medium text-gray-700 mb-2'
+                                }, 'التحقق الرياضي'),
+                                h('div', { className: 'bg-gray-50 rounded-lg p-4 text-center' }, [
+                                    h('div', {
+                                        className: 'flex items-center justify-center space-x-2 space-x-reverse mb-3'
+                                    }, [
+                                        h('span', {
+                                            className: 'text-lg font-bold text-gray-800'
+                                        }, captchaQuestion),
+                                        h('button', {
+                                            type: 'button',
+                                            onClick: generateCaptcha,
+                                            className: 'text-red-600 hover:text-red-700'
+                                        }, '🔄')
+                                    ]),
+                                    h('input', {
+                                        type: 'number',
+                                        value: captchaAnswer,
+                                        onChange: (e) => setCaptchaAnswer(e.target.value),
+                                        className: 'w-20 text-center py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-500 focus:border-red-500',
+                                        placeholder: '?',
+                                        required: true
+                                    })
+                                ])
+                            ]),
+
+                            error && h('div', {
+                                key: 'error',
+                                className: 'p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm'
+                            }, error),
+
+                            h(Button, {
+                                key: 'submit-btn',
+                                type: 'submit',
+                                className: 'w-full bg-red-600 hover:bg-red-700'
+                            }, 'تسجيل الدخول')
+                        ]),
+
+                        h('div', {
+                            key: 'version',
+                            className: 'text-center mt-6'
+                        }, [
+                            h('p', {
+                                className: 'text-xs text-gray-500'
+                            }, `${version} - منصة الإحصائيات العامة لتطوع الهلال الأحمر`)
+                        ])
+                    ])
+                ])
+            ]);
+        };
+
+        // Main App Component
+        const App = () => {
+            const [currentUser, setCurrentUser] = useState(null);
+            const [userRole, setUserRole] = useState(null);
+            const [currentView, setCurrentView] = useState('dashboard');
+            const [selectedCity, setSelectedCity] = useState(null);
+            const [statisticsData, setStatisticsData] = useState({});
+            const [isLoading, setIsLoading] = useState(false);
+
+            const SITE_VERSION = 'SRCA 1.0';
+
+            useEffect(() => {
+                loadCurrentStatistics();
+            }, []);
+
+            const loadCurrentStatistics = async () => {
+                try {
+                    setIsLoading(true);
+                    // Mock API call - in real app this would be actual API
+                    const mockResponse = {
+                        success: true,
+                        data: {
+                            data: {
+                                'المدينة': {
+                                    totalVolunteers: 1250,
+                                    data: [
+                                        { name: 'المجال الاسعافي', value: 320 },
+                                        { name: 'التعليم', value: 280 }
+                                    ],
+                                    details: []
+                                }
+                            }
+                        }
+                    };
+                    
+                    if (mockResponse.success && mockResponse.data) {
+                        setStatisticsData(mockResponse.data.data || {});
+                    }
+                } catch (error) {
+                    console.error('خطأ في تحميل الإحصائيات:', error);
+                } finally {
+                    setIsLoading(false);
+                }
+            };
+
+            const handleLogin = (email, role) => {
+                let userName = 'مستخدم';
+                let roleName = 'مستكشف الإحصائيات';
+                
+                if (role === 'digital_admin') {
+                    userName = 'WELLCOME';
+                    roleName = 'الإدارة الرقمية';
+                } else if (role === 'tech_admin') {
+                    userName = 'WELLCOME ';
+                    roleName = 'الإداري التقني';
+                } else if (role === 'manager') {
+                    userName = 'WELLCOME ';
+                    roleName = 'الإداري';
+                } else {
+                    userName = email.split('@')[0];
+                    roleName = 'مستكشف الإحصائيات';
+                }
+                
+                setCurrentUser({ name: userName, role: roleName, email: email });
+                setUserRole(role);
+            };
+
+            const handleLogout = () => {
+                setCurrentUser(null);
+                setUserRole(null);
+                setCurrentView('dashboard');
+                setSelectedCity(null);
+            };
+
+            const handleCitySelect = (city, cityDetails) => {
+                console.log('handleCitySelect called with:', city, cityDetails);
+                setSelectedCity({ name: city, details: cityDetails || [] });
+                setCurrentView('cityDetails');
+                console.log('View changed to cityDetails, selectedCity:', { name: city, details: cityDetails || [] });
+            };
+
+            const handleViewChange = (view) => {
+                setCurrentView(view);
+                if (view === 'dashboard') {
+                    setSelectedCity(null);
+                }
+            };
+
+            const handleDataUpload = (newData) => {
+                setStatisticsData(prevData => ({
+                    ...prevData,
+                    ...newData
+                }));
+                
+                if (newData.lastUpdate || newData.uploadTimestamp) {
+                    loadCurrentStatistics();
+                } else {
+                    loadCurrentStatistics();
+                }
+            };
+
+            if (!currentUser) {
+                return h(Login, {
+                    onLogin: handleLogin,
+                    version: SITE_VERSION
+                });
+            }
+
+            return h('div', { className: 'min-h-screen bg-gray-50' }, [
+                h(Header, {
+                    key: 'header',
+                    user: currentUser,
+                    onLogout: handleLogout,
+                    version: SITE_VERSION
+                }),
+                h('div', { key: 'main-container', className: 'flex' }, [
+                    h(Sidebar, {
+                        key: 'sidebar',
+                        userRole: userRole,
+                        currentView: currentView,
+                        onViewChange: handleViewChange
+                    }),
+                    h('main', { key: 'main-content', className: 'flex-1 mr-72 mt-16 p-6' }, [
+                        currentView === 'dashboard' && h(Dashboard, {
+                            key: 'dashboard',
+                            onCitySelect: handleCitySelect,
+                            statisticsData: statisticsData,
+                            userRole: userRole,
+                            isLoading: isLoading
+                        }),
+                        
+                        currentView === 'cityDetails' && selectedCity && h('div', {
+                            key: 'city-details',
+                            className: 'space-y-6'
+                        }, [
+                            h('div', {
+                                key: 'city-header',
+                                className: 'flex items-center justify-between'
+                            }, [
+                                h(Button, {
+                                    key: 'back-btn',
+                                    variant: 'outline',
+                                    onClick: () => handleViewChange('dashboard'),
+                                    className: 'flex items-center space-x-2 space-x-reverse'
+                                }, [
+                                    h(ArrowRight, { key: 'arrow', className: 'h-4 w-4' }),
+                                    h('span', { key: 'text' }, 'العودة للصفحة الرئيسية')
+                                ]),
+                                h('div', { key: 'city-title', className: 'text-center' }, [
+                                    h('h1', {
+                                        key: 'title',
+                                        className: 'text-3xl font-bold text-gray-800'
+                                    }, selectedCity.name),
+                                    h('p', {
+                                        key: 'subtitle',
+                                        className: 'text-gray-600'
+                                    }, 'تفاصيل إحصائيات التطوع')
+                                ])
+                            ]),
+                            h('div', {
+                                key: 'city-content',
+                                className: 'text-center py-12'
+                            }, [
+                                h('h2', {
+                                    key: 'message',
+                                    className: 'text-xl font-semibold text-gray-800 mb-2'
+                                }, `تفاصيل مدينة ${selectedCity.name}`),
+                                h('p', {
+                                    key: 'description',
+                                    className: 'text-gray-600'
+                                }, 'سيتم عرض تفاصيل الإحصائيات هنا')
+                            ])
+                        ]),
+
+                        // Debug info
+                        h('div', {
+                            key: 'debug',
+                            className: 'fixed bottom-20 left-4 bg-black text-white p-2 rounded text-xs z-40'
+                        }, [
+                            h('div', { key: 'view' }, `Current View: ${currentView}`),
+                            h('div', { key: 'city' }, `Selected City: ${selectedCity ? selectedCity.name : 'None'}`),
+                            h('div', { key: 'data' }, `Statistics Data Keys: ${Object.keys(statisticsData).join(', ')}`)
+                        ])
+                    ])
+                ]),
+                
+                h('div', {
+                    key: 'version-bar',
+                    className: 'fixed bottom-0 left-0 right-0 bg-red-600 text-white text-center py-1 text-sm z-50'
+                }, `${SITE_VERSION} - منصة الإحصائيات العامة لتطوع الهلال الأحمر - محافظة المدينة المنورة`)
+            ]);
+        };
+
+        // Render the app
+        const root = createRoot(document.getElementById('root'));
+        root.render(h(App));
+    </script>
+</body>
+</html>

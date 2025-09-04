@@ -1,0 +1,59 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Cairo:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --red-crescent: #E4002B;
+  --red-crescent-dark: #c00024;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  margin: auto;
+}
+
+body {
+  font-family: 'Cairo', 'Inter', system-ui, -apple-system, sans-serif;
+  direction: rtl;
+}
+
+/* Custom utilities */
+.text-red-crescent {
+  color: var(--red-crescent);
+}
+
+.bg-red-crescent {
+  background-color: var(--red-crescent);
+}
+
+.border-red-crescent {
+  border-color: var(--red-crescent);
+}
+
+/* Chart container styles */
+.recharts-wrapper {
+  direction: ltr;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
